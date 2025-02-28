@@ -23,7 +23,6 @@ public class CommandMessageHandler {
     public CommandMessageHandler(ClientApiBase clientApiBase, PolychatClient client) {
         this.clientApiBase = clientApiBase;
         this.client = client;
-        System.out.println("command message handler");
     }
 
     public int calculateParameters(String command) {

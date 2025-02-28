@@ -1,5 +1,7 @@
 package club.moddedminecraft.polychat.client.clientbase.util;
 
+import club.moddedminecraft.polychat.client.clientbase.logging.LogManager;
+
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -19,14 +21,14 @@ public class MuteStorage {
         try {
             Object unparsed = new ObjectInputStream(new FileInputStream(path.resolve(FILENAME).toFile())).readObject();
             if (!(unparsed instanceof UUID[])) {
-                System.err.println("Failed to parse mutelist!");
+                LogManager.LOGGER.warn("Failed to parse mutelist!");
                 return;
             }
             UUID[] uuids = (UUID[]) unparsed;
             List<UUID> tempList = Arrays.asList(uuids);
             Collections.addAll(muteList, uuids);
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Failed to access mutelist!");
+            LogManager.LOGGER.warn("Failed to access mutelist!");
         }
     }
 
@@ -54,7 +56,7 @@ public class MuteStorage {
             UUID[] uuidArray = uuids.toArray(new UUID[0]);
             outputStream.writeObject(uuidArray);
         } catch (IOException e) {
-            System.err.println("Failed to access mutelist");
+            LogManager.LOGGER.warn("Failed to access mutelist");
         }
     }
 

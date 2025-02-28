@@ -4,6 +4,7 @@ import club.moddedminecraft.polychat.client.clientbase.handlers.ChatMessageHandl
 import club.moddedminecraft.polychat.client.clientbase.handlers.CommandMessageHandler;
 import club.moddedminecraft.polychat.client.clientbase.handlers.PlayerStatusChangedMessageHandler;
 import club.moddedminecraft.polychat.client.clientbase.handlers.ServerStatusMessageHandler;
+import club.moddedminecraft.polychat.client.clientbase.logging.LogManager;
 import club.moddedminecraft.polychat.client.clientbase.util.MuteStorage;
 import club.moddedminecraft.polychat.core.common.YamlConfig;
 import club.moddedminecraft.polychat.core.messagelibrary.PolychatProtobufMessageDispatcher;
@@ -21,12 +22,12 @@ import java.util.List;
 public class PolychatClient {
 
     private final ClientApiBase clientApi;
-    private final Client client;
-    private final PolychatProtobufMessageDispatcher polychatProtobufMessageDispatcher;
-    private final YamlConfig config;
-    private final String serverId;
-    private final ClientCallbacks clientCallbacks;
-    private final MuteStorage muteStorage;
+    private Client client;
+    private PolychatProtobufMessageDispatcher polychatProtobufMessageDispatcher;
+    private YamlConfig config;
+    private String serverId;
+    private ClientCallbacks clientCallbacks;
+    private MuteStorage muteStorage;
     private long lastUpdate = 0;
     private static final HashMap<Integer, Integer> colorHashMap = new HashMap<Integer, Integer>() {{
         put(0, 0x000000);
@@ -53,8 +54,18 @@ public class PolychatClient {
      * @param clientImpl the implementation of the client protocol
      */
     public PolychatClient(ClientApiBase clientImpl) {
-        clientCallbacks = new ClientCallbacks(this);
         clientApi = clientImpl;
+        initialize();
+    }
+
+    public PolychatClient(ClientApiBase clientImpl, YamlConfig customConfig) {
+        clientApi = clientImpl;
+        config = customConfig;
+        initialize();
+    }
+
+    private void initialize() {
+        clientCallbacks = new ClientCallbacks(this);
         config = getConfig();
         client = new Client(config.getOrDefault("server.address", "localhost"),
                 config.getOrDefault("server.port", 5005), config.getOrDefault("server.buffersize", 32768));
@@ -79,6 +90,10 @@ public class PolychatClient {
      * @return client config
      */
     public YamlConfig getConfig() {
+        if (config != null) {
+            return config;
+        }
+
         try {
             Path directory = clientApi.getConfigDirectory();
             Path configPath = directory.resolve("polychat.yml");
@@ -90,8 +105,7 @@ public class PolychatClient {
 
             return YamlConfig.fromFilesystem(configPath);
         } catch (IOException e) {
-            System.err.println("Failed to load config!");
-            e.printStackTrace();
+            LogManager.LOGGER.error("Failed to load config!", e);
         }
         return YamlConfig.fromInMemoryString("");
     }
@@ -141,7 +155,7 @@ public class PolychatClient {
         try {
             messages = client.poll();
         } catch (IOException e) {
-            System.err.println("Failed to reconnect to Polychat server");
+            LogManager.LOGGER.warn("Failed to reconnect to Polychat server", e);
         }
 
         for (Message message : messages) {
@@ -162,8 +176,7 @@ public class PolychatClient {
         try {
             client.sendMessage(messageBytes);
         } catch (IOException e) {
-            System.err.println("Failed to send message!");
-            e.printStackTrace();
+            LogManager.LOGGER.warn("Failed to send message!", e);
         }
     }
 
