@@ -22,12 +22,12 @@ import java.util.List;
 public class PolychatClient {
 
     private final ClientApiBase clientApi;
-    private Client client;
-    private PolychatProtobufMessageDispatcher polychatProtobufMessageDispatcher;
-    private YamlConfig config;
-    private String serverId;
-    private ClientCallbacks clientCallbacks;
-    private MuteStorage muteStorage;
+    private final Client client;
+    private final PolychatProtobufMessageDispatcher polychatProtobufMessageDispatcher;
+    private final YamlConfig config;
+    private final String serverId;
+    private final ClientCallbacks clientCallbacks;
+    private final MuteStorage muteStorage;
     private long lastUpdate = 0;
     private static final HashMap<Integer, Integer> colorHashMap = new HashMap<Integer, Integer>() {{
         put(0, 0x000000);
@@ -54,19 +54,13 @@ public class PolychatClient {
      * @param clientImpl the implementation of the client protocol
      */
     public PolychatClient(ClientApiBase clientImpl) {
-        clientApi = clientImpl;
-        initialize();
+        this(clientImpl, null);
     }
 
     public PolychatClient(ClientApiBase clientImpl, YamlConfig customConfig) {
         clientApi = clientImpl;
-        config = customConfig;
-        initialize();
-    }
-
-    private void initialize() {
+        config = customConfig != null ? customConfig : getConfig();
         clientCallbacks = new ClientCallbacks(this);
-        config = getConfig();
         client = new Client(config.getOrDefault("server.address", "localhost"),
                 config.getOrDefault("server.port", 5005), config.getOrDefault("server.buffersize", 32768));
         polychatProtobufMessageDispatcher = new PolychatProtobufMessageDispatcher();
